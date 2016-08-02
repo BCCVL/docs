@@ -1,37 +1,39 @@
 node {
 
     stage 'Checkout'
+    
+    if (! env.BRANCH_NAME) {
+        env.BRANCH_NAME = 'develop'
+        // checkout source
+        git url: "https://github.com/BCCVL/docs.git/", branch: env.BRANCH_NAME
+    } else {
+        checkout scm
+    }
 
-    checkout scm
+    stage 'Build'
 
-    docker.withRegistry('https://hub.bccvl.org.au', 'hub.bccvl.org.au') {
-        docker.withServer('unix:///var/run/docker.sock') {
+    docker.image('python:3.5.2-alpine').inside("-u root") {
+        sh("apk --update add zlib zlib-dev libjpeg-turbo-dev libpng-dev gcc libc-dev make")
+        sh("pip install -r requirements.txt")
+        sh("make html")
+    }
 
-            stage 'Build'
+    // Build image
+    stage 'Build Image'
 
-            docker.image('python:3.5.-apline').inside("-u root") {
-                sh("pip install -r requirements.txt")
-                sh("make html")
-                // dir("_build/html") {
-                //     stash("docs.bccvl.org.au")
-                // }
-                // Build should now be available in {workdir}/_build/html
-            }
+    def version = getPythonVersion('conf.py')
+    def imagename = "hub.bccvl.org.au/bccvl/docs:${version}-${env.BUILD_NUMBER}"
 
-            // Build image
-            stage 'Build Image'
+    def image = docker.build(imagename)
 
-            def imagename = "hub.bccvl.org.au/bccvl/docs"
+    if (env.BRANCH_NAME == 'master') {
+        // only deploy master branch
+        stage 'Push Image'
 
-            def image = docker.build(imagename)
+        image.push()
 
-            stage 'Push Image'
+        stage 'Deploy'
 
-            image.push()
-
-            stage 'Deploy'
-
-            deploy("Docs", env.BRANCH_NAME, imagename);
-        }
+        deploy("Docs", env.BRANCH_NAME, imagename);
     }
 }
