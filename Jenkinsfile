@@ -2,7 +2,7 @@ node {
 
     stage 'Checkout'
 
-    scm checkout
+    checkout scm
 
     docker.withRegistry('https://hub.bccvl.org.au', 'hub.bccvl.org.au') {
         docker.withServer('unix:///var/run/docker.sock') {
