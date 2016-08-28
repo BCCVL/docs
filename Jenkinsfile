@@ -1,21 +1,24 @@
+
 node {
 
+  catchError {
+    
     stage 'Checkout'
     
     if (! env.BRANCH_NAME) {
-        env.BRANCH_NAME = 'develop'
-        // checkout source
-        git url: "https://github.com/BCCVL/docs.git/", branch: env.BRANCH_NAME
+      env.BRANCH_NAME = 'develop'
+      // checkout source
+      git url: "https://github.com/BCCVL/docs.git/", branch: env.BRANCH_NAME
     } else {
-        checkout scm
+      checkout scm
     }
 
     stage 'Build'
 
     docker.image('python:3.5.2-alpine').inside("-u root") {
-        sh("apk --update add zlib zlib-dev libjpeg-turbo-dev libpng-dev gcc libc-dev make")
-        sh("pip install -r requirements.txt")
-        sh("make html")
+      sh("apk --update add zlib zlib-dev libjpeg-turbo-dev libpng-dev gcc libc-dev make enchant-dev")
+      sh("pip install -r requirements.txt")
+      sh("make html")
     }
 
     // Build image
@@ -27,13 +30,25 @@ node {
     def image = docker.build(imagename)
 
     if (env.BRANCH_NAME == 'master') {
-        // only deploy master branch
-        stage 'Push Image'
+      // only deploy master branch
+      stage 'Push Image'
 
-        image.push()
+      image.push()
 
-        stage 'Deploy'
+      stage 'Deploy'
 
-        deploy("Docs", env.BRANCH_NAME, imagename);
+      deploy("Docs", env.BRANCH_NAME, imagename);
     }
+  }
+
+  step([$class: 'Mailer',
+        notifyEveryUnstableBuild: true,
+        recipients: 'g.weis@griffith.edu.au',
+        sendToIndividuals: true])
+        
 }
+
+
+// Local Variables:
+//   mode: groovy
+// End:
