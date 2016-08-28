@@ -131,6 +131,14 @@ Experiment API
 
    :form string lsid: Species LSID
 
+
+.. http:get:: /API/em/v1/metadata
+
+   Fetch information about an experiment and contained results.
+
+   :<json string uuid: The uuid of the experiment
+
+   :>json array results: List of results including result metadata
                       
 .. http:post:: /API/em/v1/submitsdm
 
@@ -332,6 +340,14 @@ Data API
         "title": "Dataset API v1"
       }    
 
+      
+.. http:get:: /API/dm/v1/search
+
+   Search for datasets within current context (path). This endpoint takes a variable number of parameters forming the search query.
+
+   :>json int b_start: batch start
+   :>json int b_size: batch size (limited to max 50)
+   
 
 .. http:get:: /API/dm/v1/metadata
 
@@ -339,7 +355,7 @@ Data API
 
    :query string uuid: UUID for dataset object
 
-   :>json objct metadata: Metadata about requested dataset
+   :>json object metadata: Metadata about requested dataset
 
                           
 .. http:get:: /API/dm/v1/update_metadata
