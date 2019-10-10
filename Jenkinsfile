@@ -43,7 +43,7 @@ node {
 
   step([$class: 'Mailer',
         notifyEveryUnstableBuild: true,
-        recipients: 'g.weis@griffith.edu.au',
+        recipients: 'y.liaw@griffith.edu.au',
         sendToIndividuals: true])
         
 }
